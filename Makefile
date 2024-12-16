@@ -168,14 +168,8 @@ kind-cluster: kind
 load-on-kind: docker-build kind-cluster ## Load the docker image into the kind cluster.
 	$(KIND) load docker-image ${IMG}
 
-deploy-olm: export KIND_WITH_REGISTRY=true
-deploy-olm: operator-sdk kind-cluster ## deploys OLM on the cluster
-	$(OPERATOR_SDK) olm install --version $(OLM_VERSION) --timeout 5m0s
-	$(OPERATOR_SDK) olm status
-
 deploy-with-olm: export VERSION=dev
-deploy-with-olm: export CSV_VERSION=0.0.0
-deploy-with-olm: deploy-olm load-on-kind build-and-push-bundle-images ## deploys the operator with OLM instead of manifests
+deploy-with-olm: load-on-kind build-and-push-bundle-images ## deploys the operator with OLM instead of manifests
 	sed -i 's|image:.*|image: $(BUNDLE_INDEX_IMG)|' config/olm-install/install-resources.yaml
 	sed -i 's#mymetallb#$(NAMESPACE)#g' config/olm-install/install-resources.yaml
 	$(KUSTOMIZE) build config/olm-install | kubectl apply -f -
